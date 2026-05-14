@@ -6,6 +6,9 @@
 <title>NAZCA · GestãoPOP</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-database-compat.js"></script>
+
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -231,15 +234,15 @@
       <div class="chart-wrap-lg donut-wrap" style="position:relative">
         <canvas id="donutChart"></canvas>
         <div class="donut-center" id="donut-center-anl">
-          <div class="donut-pct" id="donut-pct-anl" style="font-size: 30px; position: relative; left:20px;">—</div>
-          <div class="donut-label" style="font-size: 19px;position: relative; left:21px;top:-10px">Aprovados</div>
+          <div class="donut-pct" id="donut-pct-anl" style="font-size:30px;position:relative;left:20px;">—</div>
+          <div class="donut-label" style="font-size:19px;position:relative;left:21px;top:-10px">Aprovados</div>
         </div>
       </div>
     </div>
     <div class="bento-card col-12">
       <h3>Detalhamento de POPs <span id="filter-label" style="color:var(--red);font-size:var(--fs-xs);margin-left:4px"></span></h3>
       <table class="data-table" id="pops-analytics-table">
-        <thead><tr><th>Código</th><th>Procedimento</th><th>Setor</th><th>Status Doc</th><th>Vigência</th><th>Treinamento</th><th>Numero de revisão</th></tr></thead>
+        <thead><tr><th>Código</th><th>Procedimento</th><th>Versão</th><th>Setor</th><th>Status Doc</th><th>Vigência</th><th>Treinamento</th><th>Anexos</th><th>Ações</th></tr></thead>
         <tbody id="pops-analytics-body"></tbody>
       </table>
     </div>
@@ -282,6 +285,10 @@
       </div>
       <button class="btn btn-outline" onclick="openRevisaoGeral()">🔄 Revisar POPs</button>
       <button class="btn btn-primary" onclick="openNovoPOP()">+ Novo POP</button>
+      <div style="display:flex;gap:4px;margin-left:4px">
+        <button id="view-table-btn" class="btn btn-outline active" onclick="setPOPsView('table')" title="Visualização em tabela">☰</button>
+        <button id="view-kanban-btn" class="btn btn-outline" onclick="setPOPsView('kanban')" title="Visualização Kanban">⊞</button>
+      </div>
     </div>
   </div>
 
@@ -291,6 +298,12 @@
       <thead><tr><th>Código</th><th>Tipo</th><th>Setor</th><th>Descrição</th><th>Status Doc</th><th>Dt. Criação</th><th>Dt. Revisão</th><th>Dt. Vencimento</th><th>Vigência</th><th>Dias</th><th>Treinamento</th><th>Ações</th></tr></thead>
       <tbody id="pops-body"></tbody>
     </table>
+  </div>
+  </div>
+
+  <div id="pops-kanban-view" style="display:none">
+  <div class="bento-card col-12">
+    <div class="kanban-board" id="pops-kanban-board"></div>
   </div>
   </div>
 
@@ -309,6 +322,7 @@
       <select class="form-select" id="emp-sector-filter" onchange="renderFuncionarios()" style="width:auto;padding:9px 12px;font-size:var(--fs-sm)">
         <option value="">Todos os Setores</option>
       </select>
+      <button class="btn btn-outline" onclick="openInativosModal()" id="emp-inativos-section" style="display:none">🔴 Inativos (<span id="emp-inativos-count">0</span>)</button>
       <button class="btn btn-primary" onclick="openNovoFuncionario()">+ Registrar Funcionário</button>
     </div>
   </div>

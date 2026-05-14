@@ -499,3 +499,79 @@ textarea.form-input{resize:vertical;min-height:80px}
 .print-header{display:none;text-align:center;margin-bottom:20px;border-bottom:2px solid var(--red);padding-bottom:12px}
 .print-header h1{font-family:'Sora',sans-serif;font-size:1.4rem;color:var(--red)}
 .print-header p{font-size:.85rem;color:#666;margin-top:4px}
+/* ═══ RESPONSIVIDADE REFORÇADA — versão live ═══ */
+.table-wrap,.data-table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.data-table{width:100%;border-collapse:collapse}
+.emp-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
+.emp-card{min-width:0}
+.emp-card-header{gap:10px}
+.emp-card-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.form-input,.form-select,textarea{max-width:100%}
+.modal-box{max-width:min(760px,calc(100vw - 24px));max-height:92vh;overflow-y:auto}
+.modal-box.wide,.modal-wide{max-width:min(1180px,calc(100vw - 24px));width:100%}
+
+@media(max-width:900px){
+  .navbar{padding:0 10px}
+  .nb-brand{margin-right:8px}
+  .nb-name{font-size:.95rem}
+  .nb-sub{display:none}
+  .nb-right{gap:5px}
+  .user-menu-btn{padding:6px 8px}
+  .user-menu-btn span:not(.user-avatar){display:none}
+  .page-header{align-items:stretch}
+  .page-actions{width:100%;display:grid;grid-template-columns:1fr;gap:8px}
+  .page-actions .btn,.page-actions .form-select,.page-actions .search-input{width:100%!important;justify-content:center}
+  .bento-grid{grid-template-columns:1fr!important}
+  .kpi-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .emp-grid{grid-template-columns:repeat(auto-fill,minmax(240px,1fr))}
+  .modal-body table,.data-table{min-width:680px}
+  .cmd-palette-box{width:calc(100vw - 24px)}
+}
+
+@media(max-width:640px){
+  html{font-size:15px}
+  .page{padding:14px 10px 36px;margin-top:var(--navbar-h)}
+  .page-title{font-size:1.35rem}
+  .page-sub{font-size:.9rem}
+  .kpi-grid{grid-template-columns:1fr}
+  .emp-grid{grid-template-columns:1fr}
+  .emp-card-header{align-items:flex-start;flex-direction:column}
+  .emp-card-actions{width:100%;justify-content:flex-start}
+  .emp-card-actions .btn{flex:1;justify-content:center}
+  .form-grid{grid-template-columns:1fr!important}
+  .form-group[style*="grid-column:span 2"]{grid-column:auto!important}
+  .modal-box{padding:18px 14px;border-radius:18px}
+  .modal-header{gap:8px}
+  .modal-title{font-size:1.2rem}
+  .modal-close{width:36px;height:36px;flex-shrink:0}
+  .btn{width:auto;justify-content:center;white-space:normal;text-align:center}
+  .mfa-digits{gap:6px}
+  .mfa-digit{width:38px;height:50px}
+  #toast-container{left:10px;right:10px;top:74px}
+  .toast{width:100%}
+}
+
+@media(max-width:420px){
+  .login-box{padding:28px 18px}
+  .nb-brand img{max-width:42px;height:auto}
+  .page-actions{gap:6px}
+  .emp-role{line-height:1.35}
+}
+
+/* Ajustes finais: Analytics tabela única + Matriz dinâmica */
+.matrix-cell-label{font-size:.58rem;color:var(--gray-soft);margin-top:2px;line-height:1;text-align:center;white-space:nowrap}
+.dark-mode .matrix-cell-label{color:#aaa!important}
+#page-analytics .bento-card{overflow-x:auto}
+#setores-analytics-table th,#setores-analytics-table td{white-space:nowrap}
+@media (max-width: 900px){
+  #page-analytics .page-actions{width:100%;justify-content:flex-start}
+  #setores-analytics-table{min-width:820px}
+  #heatmap-table{min-width:900px}
+  .heat-cell{min-width:30px}
+  .matrix-cell-label{font-size:.54rem}
+}
+@media (max-width: 620px){
+  #page-analytics .page-title{font-size:1.55rem}
+  #page-analytics .page-sub{font-size:.9rem}
+  #page-analytics .bento-card{padding:12px}
+}
