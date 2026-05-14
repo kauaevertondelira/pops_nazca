@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NAZCA · GestãoPOP BI</title>
+<title>NAZCA · GestãoPOP</title>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
   <link rel="stylesheet" href="style.css">
@@ -55,8 +55,8 @@
 <div id="login-screen">
   <div class="login-box" id="login-panel">
     <div class="login-logo">
-      <div style="width:60px;height:60px;background:var(--red);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 12px">🏭</div>
-      <h1>NAZCA <span>BI</span></h1>
+      <div style="width:80px;height:75px;background:var(--red);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:2rem;margin:0 auto 12px"><img src="img/logo_nazca.png"></div>
+      <h1>POPS <span>NAZCA</span></h1>
       <p>GestãoPOP · Sistema de Conformidade</p>
     </div>
     <div class="login-error" id="login-error"></div>
@@ -180,7 +180,7 @@
     <div class="bento-card col-7">
       <h3>Conformidade por Setor</h3>
       <div class="sector-row sector-row-header">
-        <span>Setor</span><span style="text-align:center">POPs</span><span style="text-align:center">Aprovados</span><span style="text-align:center" class="sector-col-3">Críticos</span><span>Progresso</span><span>Status</span>
+        <span>Setor</span><span style="text-align:center">POPs </span> <span style="text-align:center"> Aprovados </span> <span style="text-align:center" class="sector-col-3"> Críticos </span> <span> Progresso </span> <span> Status</span>
       </div>
       <div id="sector-table"></div>
     </div>
@@ -195,10 +195,10 @@
     <div class="bento-card col-6">
       <h3>Status de POPs Ativos</h3>
       <div class="chart-wrap-lg donut-wrap" style="position:relative;display:flex;align-items:center;justify-content:center">
-        <canvas id="statusChart" style="max-height:240px"></canvas>
-        <div class="donut-center" id="donut-center-dash" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+        <canvas id="statusChart" style="max-height:300px"></canvas>
+        <div class="donut-center" id="donut-center-dash" style="position:absolute;top:40%;left:44%;transform:translate(-50%,-50%);text-align:center;pointer-events:none">
+          <div class="donut-label" style="font-size: 19px;position: relative; left:1px;top:75px">Aprovados</div>
           <div class="donut-pct" id="donut-pct-dash">—</div>
-          <div class="donut-label">Conformes</div>
         </div>
       </div>
     </div>
@@ -231,8 +231,8 @@
       <div class="chart-wrap-lg donut-wrap" style="position:relative">
         <canvas id="donutChart"></canvas>
         <div class="donut-center" id="donut-center-anl">
-          <div class="donut-pct" id="donut-pct-anl">—</div>
-          <div class="donut-label">Aprovados</div>
+          <div class="donut-pct" id="donut-pct-anl" style="font-size: 30px; position: relative; left:20px;">—</div>
+          <div class="donut-label" style="font-size: 19px;position: relative; left:21px;top:-10px">Aprovados</div>
         </div>
       </div>
     </div>
