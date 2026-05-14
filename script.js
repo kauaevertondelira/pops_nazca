@@ -185,30 +185,6 @@ let EMPLOYEES = [
   ]},
 ];
 
-const ALL_SECTORS = {
-  AL:'Almoxarifado',
-  CQ:'Qualidade / CQ',
-  DE:'Des. Embalagem',
-  DP:'P&D',
-};
-
-const ROLES_BY_SECTOR = {
-  'Almoxarifado':['Assistente Adm Almoxarifado','Auxiliar de Almoxarifado','Operador de Empilhadeira'],
-  'Qualidade / CQ':['Analista de Controle de Qualidade','Assistente da Qualidade','Analista da Garantia da Qualidade','Analista de Laboratório','Estagiário (Qualidade)'],
-  'Des. Embalagem':['Analista de Design','Designer de Embalagem','Coordenador de Embalagem'],
-  'P&D':['Pesquisador Júnior','Assistente de P&D','Analista de P&D'],
-  'Qualidade de Vida':['Auxiliar de Qualidade','Supervisor de Higiene','Gestora de Qualidade de Vida'],
-  'Nutrição':['Nutricionista','Auxiliar de Nutrição'],
-  'Operações':['Gerente Operacional','Supervisor de Operações','Analista de PCP','Líder de Produção','Operador de Produção','Auxiliar de Manipulação'],
-  'Segurança do Trabalho':['Técnica de Segurança','Engenheiro de Segurança'],
-  'RH':['Coordenadora de RH','Analista de RH','Assistente de RH'],
-  'Jurídico':['Analista Jurídico','Advogado'],
-  'Administrativo':['Auxiliar Administrativo','Assistente Administrativo','Gerente Administrativo'],
-  'Produção':['Líder de Produção','Operador de Produção','Auxiliar de Manipulação'],
-  'Manipulação':['Auxiliar de Manipulação'],
-  'PCP':['Analista de PCP'],
-};
-
 const ONBOARDING_MAP = {
   'Qualidade de Vida':['Higiene e Manipulação de Alimentos','Uso de EPI e Segurança no Trabalho','Gestão de Resíduos','Controle de Qualidade e Inspeção','Atendimento e Bem-Estar do Colaborador'],
   'Operações':['Uso de EPI e Segurança no Trabalho','Gestão de Resíduos'],
@@ -260,7 +236,7 @@ function showConfirm(title, msg, cb) {
   confirmCallback = cb;
   document.getElementById('confirm-title').textContent = title;
   document.getElementById('confirm-msg').textContent = msg;
-  document.getElementById('confirm-yes-btn').onclick = () => { const fn = confirmCallback; closeConfirm(); if(fn) fn(); };
+  document.getElementById('confirm-yes-btn').onclick = () => { closeConfirm(); if(confirmCallback) confirmCallback(); };
   document.getElementById('confirm-overlay').classList.add('open');
 }
 function closeConfirm() {
@@ -502,12 +478,15 @@ function renderAnalytics(){
   document.getElementById('pops-analytics-body').innerHTML=fp.map(p=>`
     <tr>
       <td><strong style="color:var(--red)">${p.code}</strong></td>
-      <td style="max-width:260px">${p.desc}</td>
+      <td style="max-width:220px">${p.desc}</td>
       <td>${popTypeBadge(p.popType)} <span class="badge badge-blue">${p.sectorName}</span></td>
       <td>${docBadge(p.docStatus)}</td>
       <td>${vigenciaBadge(p.vigencia)}</td>
       <td>${trainBadge(p.training)}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deletePOP('${p.code}')">Excluir</button></td>
+      <td style="text-align:center">
+        <span style="display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:28px;background:var(--blue-bg);color:var(--blue);font-weight:800;font-size:.8rem;border-radius:6px;border:1.5px solid rgba(38,46,69,.18);padding:0 7px">${p.revision||1}</span>
+      </td>
+      <td><button class="btn btn-sm" style="background:var(--green);color:#fff;border:none;padding:5px 12px;border-radius:7px;font-family:inherit;font-size:var(--fs-xs);font-weight:700;cursor:pointer" onclick="openQuickRevision('${p.code}')">Revisão</button></td>
     </tr>
   `).join('');
 
@@ -544,6 +523,58 @@ function renderAnalytics(){
 }
 function setFilter(s){currentSectorFilter=s;renderAnalytics();}
 function clearFilter(){setFilter(null);}
+
+/* ══════════════════════════════════════════
+   QUICK REVISION (Analytics)
+══════════════════════════════════════════ */
+function openQuickRevision(code){
+  const pop=POPS.find(p=>p.code===code);
+  if(!pop)return;
+  const rev=pop.revision||1;
+  openModal(`Revisão Rápida — <span>${code}</span>`,`
+    <div style="padding:12px 14px;background:var(--green-bg);border-radius:var(--r);margin-bottom:16px;border-left:3px solid var(--green)">
+      <div style="font-weight:700;font-size:var(--fs-sm);color:var(--gray)">${pop.desc}</div>
+      <div style="font-size:var(--fs-xs);color:var(--gray-soft);margin-top:4px">${pop.sectorName} · ${pop.docStatus}</div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Alterações realizadas nesta revisão</label>
+      <textarea class="form-input" id="qr-desc" rows="5" placeholder="Descreva o que foi alterado, corrigido ou atualizado neste procedimento...">${pop.lastRevisionNote||''}</textarea>
+    </div>
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--blue-bg);border-radius:var(--r);border:1.5px solid rgba(38,46,69,.12);margin-bottom:16px">
+      <div>
+        <div style="font-size:var(--fs-xs);font-weight:700;color:var(--gray-soft);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px">Revisão atual</div>
+        <div style="font-size:1.6rem;font-weight:800;color:var(--blue);line-height:1">Rev. ${rev}</div>
+      </div>
+      <div style="text-align:right">
+        <div style="font-size:var(--fs-xs);font-weight:700;color:var(--gray-soft);text-transform:uppercase;letter-spacing:.7px;margin-bottom:2px">Após salvar</div>
+        <div style="font-size:1.6rem;font-weight:800;color:var(--green);line-height:1">Rev. ${rev+1}</div>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap">
+      <button class="btn btn-primary" onclick="saveQuickRevision('${code}')" style="background:var(--green)">✓ Salvar Revisão</button>
+      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
+    </div>
+  `);
+}
+
+function saveQuickRevision(code){
+  const pop=POPS.find(p=>p.code===code);
+  if(!pop)return;
+  const note=document.getElementById('qr-desc')?.value?.trim();
+  if(!note){toast('Campo obrigatório','Descreva as alterações realizadas nesta revisão.','warn');return;}
+  pop.revision=(pop.revision||1)+1;
+  pop.lastRevisionNote=note;
+  pop.dataRevisao=new Date().toLocaleDateString('pt-BR');
+  const venc=new Date();venc.setFullYear(venc.getFullYear()+5);
+  pop.dataVencimento=venc.toLocaleDateString('pt-BR');
+  pop.vigencia='NO PRAZO';
+  if(pop.docStatus!=='APROVADO')pop.docStatus='APROVADO';
+  addLog(`POP Revisado: ${code}`, 'edit', `Rev. ${pop.revision} · ${note.substring(0,60)}${note.length>60?'…':''}`);
+  saveData();
+  toast('Revisão Salva', `${code} atualizado para Rev. ${pop.revision}.`, 'success');
+  closeModal();
+  renderAnalytics();
+}
 
 /* ══════════════════════════════════════════
    POPs LIST
@@ -677,62 +708,16 @@ function salvarEditPOP(code){
   renderPOPs();
 }
 
-function getAreaOptionsForSector(selectedSector){
-  const all=Object.entries(ALL_SECTORS);
-  return all.filter(([k])=>k!==selectedSector).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
-}
-
-function getRolesForSelectedSectors(){
-  const setor=document.getElementById('new-pop-sector')?.value||'';
-  const areaEl=document.getElementById('new-pop-area');
-  const selectedAreas=areaEl?[...areaEl.selectedOptions].map(o=>o.value):[];
-  const allSelected=[setor,...selectedAreas].filter(Boolean);
-  const sectorNames=allSelected.map(k=>ALL_SECTORS[k]||k);
-  const roles=new Set();
-  sectorNames.forEach(sn=>{
-    (ROLES_BY_SECTOR[sn]||[]).forEach(r=>roles.add(r));
-  });
-  // Also check TRAINING_MATRIX for roles in those sectors
-  TRAINING_MATRIX.forEach(tm=>{
-    if(sectorNames.some(sn=>sn.toLowerCase().includes(tm.sector.toLowerCase())||tm.sector.toLowerCase().includes(sn.toLowerCase())))
-      roles.add(tm.role.charAt(0)+tm.role.slice(1).toLowerCase());
-  });
-  return [...roles];
-}
-
-function updateCargoOptions(selectId){
-  const roles=getRolesForSelectedSectors();
-  const sel=document.getElementById(selectId);
-  if(!sel)return;
-  const cur=sel.value;
-  sel.innerHTML='<option value="">— Selecione o cargo —</option>'+roles.map(r=>`<option value="${r}"${r===cur?' selected':''}>${r}</option>`).join('');
-}
-
-function updateAreaOptions(areaSelectId, sectorSelectId){
-  const sector=document.getElementById(sectorSelectId)?.value||'';
-  const areaEl=document.getElementById(areaSelectId);
-  if(!areaEl)return;
-  const prevSelected=[...areaEl.selectedOptions].map(o=>o.value);
-  areaEl.innerHTML=getAreaOptionsForSector(sector);
-  // restore previous selections if still available
-  [...areaEl.options].forEach(o=>{ if(prevSelected.includes(o.value))o.selected=true; });
-}
-
 function openNovoPOP(){
   const hoje = new Date().toISOString().slice(0,10);
-  const sectorOpts=Object.entries(ALL_SECTORS).map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
-  const areaOpts=Object.entries(ALL_SECTORS).filter(([k])=>k!=='AL').map(([k,v])=>`<option value="${k}">${v}</option>`).join('');
   openModal('+ Novo <span>POP</span>',`
     <div class="form-grid">
       <div class="form-group"><label class="form-label">Código</label><input type="text" class="form-input" placeholder="Ex: CQ 041" id="new-pop-code"></div>
+      <div class="form-group"><label class="form-label">Tipo</label>
+        <select class="form-select" id="new-pop-type"><option value="core">Core</option><option value="area">Área</option><option value="cargo">Cargo</option></select>
+      </div>
       <div class="form-group"><label class="form-label">Setor</label>
-        <select class="form-select" id="new-pop-sector" onchange="updateAreaOptions('new-pop-area','new-pop-sector');updateCargoOptions('new-pop-cargo')">${sectorOpts}</select>
-      </div>
-      <div class="form-group"><label class="form-label">Área <span style="font-size:.7rem;color:var(--gray-soft)">(multi-seleção)</span></label>
-        <select class="form-select" id="new-pop-area" multiple style="min-height:80px;height:auto" onchange="updateCargoOptions('new-pop-cargo')">${areaOpts}</select>
-      </div>
-      <div class="form-group"><label class="form-label">Cargo</label>
-        <select class="form-select" id="new-pop-cargo"><option value="">— Selecione o cargo —</option></select>
+        <select class="form-select" id="new-pop-sector"><option value="AL">Almoxarifado</option><option value="CQ">Qualidade / CQ</option><option value="DE">Des. Embalagem</option><option value="DP">P&D</option></select>
       </div>
       <div class="form-group"><label class="form-label">Status Doc</label>
         <select class="form-select" id="new-pop-status"><option value="ELABORAR">Elaborar</option><option value="EM REVISÃO">Em Revisão</option><option value="APROVADO">Aprovado</option><option value="OBSOLETO">Obsoleto</option></select>
@@ -756,7 +741,6 @@ function openNovoPOP(){
     <button class="btn btn-primary" onclick="salvarNovoPOP()">Salvar POP</button>
   `);
   atualizarVencimentoPOP();
-  updateCargoOptions('new-pop-cargo');
 }
 
 function atualizarVencimentoPOP(){
@@ -1044,33 +1028,6 @@ function renderFuncionarios(){
   document.getElementById('emp-grid').innerHTML=list.map(emp=>{
     const pct=empCompliance(emp);
     const color=pct>=80?'var(--green)':pct>=50?'var(--orange)':'var(--red)';
-    const inactive=emp.inactive===true;
-    if(inactive){
-      return`<div class="emp-card emp-card-inactive">
-        <div class="emp-card-header">
-          <div>
-            <div class="emp-name" style="color:var(--gray-soft);pointer-events:none">${emp.name}</div>
-            <div class="emp-role" style="opacity:.5">${emp.role} · <span class="badge badge-blue" style="font-size:.65rem">${emp.sector}</span></div>
-          </div>
-          <div class="emp-card-actions">
-            <span style="font-size:var(--fs-xs);color:var(--gray-soft);font-weight:600;padding:4px 8px;background:var(--gray-pale);border-radius:6px">Inativo</span>
-            <button class="btn btn-outline btn-sm" onclick="reintegrarFuncionario(${emp.id})" title="Reintegrar" style="color:var(--green);border-color:var(--green)">Reintegrar</button>
-          </div>
-        </div>
-        <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;opacity:.4">
-          <span style="font-size:var(--fs-xs);color:var(--gray-soft)">Core: <strong>${emp.pops.filter(p=>p.type==='core').length}</strong></span>
-          <span style="font-size:var(--fs-xs);color:var(--gray-soft)">Área: <strong>${emp.pops.filter(p=>p.type==='area').length}</strong></span>
-          <span style="font-size:var(--fs-xs);color:var(--gray-soft);font-weight:700">${pct}% compliant</span>
-        </div>
-        <div class="emp-compliance" style="opacity:.4">
-          <div class="emp-compliance-bar"><div class="emp-compliance-fill" style="width:${pct}%;background:var(--gray-soft)"></div></div>
-        </div>
-        <div style="margin-top:8px;display:flex;gap:5px;flex-wrap:wrap;opacity:.4">
-          ${emp.pops.slice(0,3).map(p=>empStatusBadge(p.status)).join('')}
-          ${emp.pops.length>3?`<span class="badge badge-gray">+${emp.pops.length-3}</span>`:''}
-        </div>
-      </div>`;
-    }
     return`<div class="emp-card">
       <div class="emp-card-header">
         <div>
@@ -1079,7 +1036,7 @@ function renderFuncionarios(){
         </div>
         <div class="emp-card-actions">
           <button class="btn btn-outline btn-sm" onclick="openEditFuncionario(${emp.id})" title="Modificar">Editar</button>
-          <button class="btn btn-sm" onclick="inativarFuncionario(${emp.id})" title="Inativar" style="background:var(--gray-soft);color:#fff;border:none;padding:5px 10px;border-radius:var(--r);cursor:pointer;font-size:var(--fs-xs);font-weight:600">Inativar</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteFuncionario(${emp.id})" title="Excluir">Excluir</button>
         </div>
       </div>
       <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap">
@@ -1138,7 +1095,7 @@ function openEmpProfile(id){
     ${!emp.pops.length?'<div style="color:var(--gray-soft)">Nenhum POP atribuído.</div>':''}
     <div style="margin-top:16px;display:flex;gap:8px;flex-wrap:wrap">
       <button class="btn btn-primary btn-sm" onclick="closeModal();setTimeout(()=>openEditFuncionario(${emp.id}),100)">Modificar</button>
-      <button class="btn btn-sm" onclick="closeModal();inativarFuncionario(${emp.id})" style="background:var(--gray-soft);color:#fff;border:none;padding:6px 14px;border-radius:var(--r);cursor:pointer;font-size:var(--fs-xs);font-weight:600">Inativar</button>
+      <button class="btn btn-danger btn-sm" onclick="closeModal();deleteFuncionario(${emp.id})">Excluir</button>
     </div>
   `);
 }
@@ -1161,7 +1118,7 @@ function openEditFuncionario(id){
     <div class="form-group"><label class="form-label">Cargo</label><input type="text" class="form-input" id="ef-role" value="${emp.role}"></div>
     <div style="display:flex;gap:10px;margin-top:8px;flex-wrap:wrap">
       <button class="btn btn-primary" onclick="salvarEditFuncionario(${id})">Salvar Alterações</button>
-      <button class="btn btn-sm" onclick="closeModal();inativarFuncionario(${id})" style="background:var(--gray-soft);color:#fff;border:none;padding:6px 14px;border-radius:var(--r);cursor:pointer;font-size:var(--fs-xs);font-weight:600">Inativar Funcionário</button>
+      <button class="btn btn-danger" onclick="closeModal();deleteFuncionario(${id})">Excluir Funcionário</button>
       <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
     </div>
   `);
@@ -1187,26 +1144,6 @@ function deleteFuncionario(id){
     toast('Funcionário Removido', `${emp.name} excluído do sistema.`, 'warn');
     renderFuncionarios();
   });
-}
-
-function inativarFuncionario(id){
-  const emp=EMPLOYEES.find(e=>e.id===id);
-  if(!emp)return;
-  showConfirm('Inativar Funcionário',`Deseja inativar "${emp.name}"? O registro será mantido, mas o funcionário ficará inativo e não poderá ser editado.`,()=>{
-    emp.inactive=true;
-    addLog(`Funcionário Inativado: ${emp.name}`, 'edit', `${emp.role} · ${emp.sector}`);
-    toast('Funcionário Inativado', `${emp.name} foi inativado.`, 'warn');
-    renderFuncionarios();
-  });
-}
-
-function reintegrarFuncionario(id){
-  const emp=EMPLOYEES.find(e=>e.id===id);
-  if(!emp)return;
-  emp.inactive=false;
-  addLog(`Funcionário Reintegrado: ${emp.name}`, 'edit', `${emp.role} · ${emp.sector}`);
-  toast('Funcionário Reintegrado', `${emp.name} foi reintegrado ao sistema.`, 'ok');
-  renderFuncionarios();
 }
 
 function openNovoFuncionario(){
