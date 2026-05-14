@@ -1266,9 +1266,58 @@ function openNovoTreinamento(){
     <div class="form-group"><label class="form-label">POP / Procedimento</label>
       <select class="form-select" id="nt-pop"><option value="">— Selecione um funcionário primeiro —</option></select>
     </div>
-    <button class="btn btn-primary" onclick="closeModal()">Registrar Treinamento</button>
+    <button class="btn btn-primary" onclick="salvarNovoTreinamento()">Registrar Treinamento</button>
   `);
 }
+
+function salvarNovoTreinamento() {
+  const empId = document.getElementById('nt-emp').value;
+  const popName = document.getElementById('nt-pop').value;
+
+  if (!empId || !popName) {
+    toast('Atenção', 'Selecione o funcionário e o POP.', 'warning');
+    return;
+  }
+
+  const funcionario = EMPLOYEES.find(e => e.id == empId);
+
+  if (funcionario) {
+    // Criamos o objeto do novo treinamento
+    const novoStatus = {
+      pop: popName,
+      version: '1.0',
+      status: 'Pendente', // IMPORTANTE: Deve ser exatamente igual ao que o filtro da aba Alertas busca
+      date: '', 
+      days: null,
+      type: 'area'
+    };
+
+    // Adiciona ao array de POPs do funcionário
+    funcionario.pops.push(novoStatus);
+
+    // 1. Salva no LocalStorage
+    saveData(); 
+
+    // 2. Fecha o Modal
+    closeModal();
+
+    // 3. ATUALIZAÇÃO CRÍTICA:
+    // Força o sistema a reconstruir a aba de Alertas
+    if (typeof renderAlertasPage === 'function') {
+      renderAlertasPage(); 
+    }
+
+    // 4. Feedback visual
+    toast('Sucesso', `Solicitação de treinamento criada para ${funcionario.name}`, 'success');
+    
+    // Opcional: Se você estiver na aba de alertas, isso vai forçar a atualização visual imediata
+    const activePage = document.querySelector('.page[style*="display: block"]');
+    if (activePage && activePage.id === 'page-alerts') {
+        renderAlertasPage();
+    }
+  }
+}
+
 
 function onNTEmpChange(){
   const empId=parseInt(document.getElementById('nt-emp').value);
@@ -1317,14 +1366,32 @@ function renderMatrix(){
 function renderAlertasPage(){
   const content=document.getElementById('alertas-page-content');
   if(!content)return;
+  
   const critical=POPS.filter(p=>p.vigencia==='VENCIDO'||p.docStatus==='ELABORAR');
   const expiring=POPS.filter(p=>p.vigencia==='VENCE EM 3 MESES');
-  const pending=POPS.filter(p=>p.training==='SOLICITADO');
+  
+  // Agrupa os treinamentos pendentes por funcionário
+  const employeesWithPending = [];
+  let totalPendencias = 0;
+
+  EMPLOYEES.forEach(emp => {
+    const pendingPops = emp.pops.filter(p => p.status === 'Pendente');
+    if (pendingPops.length > 0) {
+      employeesWithPending.push({
+        id: emp.id,
+        name: emp.name,
+        sector: emp.sector,
+        pendingPops: pendingPops
+      });
+      totalPendencias += pendingPops.length;
+    }
+  });
+
   content.innerHTML=`
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px">
       <div class="kpi-card"><div class="kpi-val" style="color:var(--red)">${critical.length}</div><div class="kpi-label">POPs Críticos</div></div>
       <div class="kpi-card orange"><div class="kpi-val">${expiring.length}</div><div class="kpi-label">Vencendo em 3 Meses</div></div>
-      <div class="kpi-card blue"><div class="kpi-val">${pending.length}</div><div class="kpi-label">Treinamentos Pendentes</div></div>
+      <div class="kpi-card blue"><div class="kpi-val">${totalPendencias}</div><div class="kpi-label">Treinamentos Pendentes</div></div>
     </div>
     <div class="bento-card col-12" style="margin-bottom:16px">
       <h3><span>🚨</span> POPs que exigem ação imediata</h3>
@@ -1343,21 +1410,69 @@ function renderAlertasPage(){
       `}).join('')}
       ${!critical.length?'<div style="color:var(--green);font-weight:700;padding:12px">✅ Nenhum POP crítico.</div>':''}
     </div>
+    
     <div class="bento-card col-12">
-      <h3><span>⏳</span> Treinamentos Solicitados</h3>
-      ${pending.map(p=>`
-        <div class="alert-item warn">
-          <span class="alert-item-icon" style="color:var(--orange);font-weight:900">!</span>
-          <div class="alert-item-text"><strong>${p.code}</strong> — ${p.desc}<div style="font-size:var(--fs-xs);color:var(--gray-soft);margin-top:2px">${p.sectorName}</div></div>
-          <div style="display:flex;gap:6px">
-            ${trainBadge(p.training)}
-            <button class="btn btn-danger btn-sm" onclick="deletePOP('${p.code}');renderAlertasPage()">Excluir</button>
+      <h3><span>⏳</span> Treinamentos Solicitados (Por Funcionário)</h3>
+      
+      ${employeesWithPending.map(emp => `
+        <div class="alert-item warn" style="cursor:pointer;" onclick="abrirPendenciasFuncionario(${emp.id})">
+          <span class="alert-item-icon" style="color:var(--blue);font-weight:900">👤</span>
+          <div class="alert-item-text">
+            <strong>${emp.name}</strong>
+            <div style="font-size:var(--fs-xs);color:var(--gray-soft);margin-top:2px">${emp.sector}</div>
+          </div>
+          <div style="display:flex;gap:12px; align-items:center;">
+            <span class="badge" style="background:var(--blue-bg);color:var(--blue);border:none;font-weight:700">
+              ${emp.pendingPops.length} pendência(s)
+            </span>
+            <span style="color:var(--gray-soft); font-size:var(--fs-xs); font-weight:600;">Ver detalhes ➔</span>
           </div>
         </div>
       `).join('')}
-      ${!pending.length?'<div style="color:var(--green);font-weight:700;padding:12px">✅ Nenhum treinamento pendente.</div>':''}
+
+      ${employeesWithPending.length === 0 ? '<div style="color:var(--green);font-weight:700;padding:12px">✅ Nenhum treinamento pendente.</div>' : ''}
     </div>
   `;
+}
+
+function abrirPendenciasFuncionario(empId) {
+  // Busca o funcionário pelo ID
+  const emp = EMPLOYEES.find(e => e.id == empId);
+  if (!emp) return;
+
+  // Filtra apenas os POPs pendentes dele
+  const pendingPops = emp.pops.filter(p => p.status === 'Pendente');
+
+  // Monta o HTML da listagem de POPs
+  let listHtml = pendingPops.map(p => `
+    <div style="padding: 12px; border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 8px; background: var(--surface); display: flex; justify-content: space-between; align-items: center;">
+      <div>
+        <strong style="color: var(--blue);">${p.pop}</strong>
+        <div style="font-size: var(--fs-xs); color: var(--gray-soft); margin-top: 4px;">Versão: ${p.version || '1.0'}</div>
+      </div>
+      <span class="badge" style="background: var(--orange-bg); color: var(--orange); border: none;">Pendente</span>
+    </div>
+  `).join('');
+
+  if (pendingPops.length === 0) {
+    listHtml = `<p style="color: var(--green); font-weight: bold;">Nenhum treinamento pendente.</p>`;
+  }
+
+  // Abre o Modal usando a sua função existente
+  openModal(`Pendências: <span>${emp.name}</span>`, `
+    <div style="margin-bottom: 20px; max-height: 400px; overflow-y: auto;">
+      <p style="font-size: var(--fs-sm); color: var(--gray-soft); margin-bottom: 16px;">
+        Este funcionário possui <strong>${pendingPops.length}</strong> solicitação(ões) de treinamento aguardando realização:
+      </p>
+      ${listHtml}
+    </div>
+    <div style="display: flex; gap: 10px; justify-content: flex-end; border-top: 1px solid var(--border); padding-top: 16px;">
+      <button class="btn btn-outline" onclick="closeModal()">Fechar</button>
+      <button class="btn btn-primary" onclick="closeModal(); navigate('funcionarios'); setTimeout(() => viewFuncionario(${emp.id}), 150)">
+        Ir para Ficha do Funcionário
+      </button>
+    </div>
+  `);
 }
 
 /* ══════════════════════════════════════════
