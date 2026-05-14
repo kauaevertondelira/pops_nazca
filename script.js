@@ -611,20 +611,6 @@ function renderPOPs(){
   `).join('');
 }
 
-function deletePOP(code){
-  const pop=POPS.find(p=>p.code===code);
-  if(!pop)return;
-  showConfirm('Excluir POP',`Tem certeza que deseja excluir o POP "${code} — ${pop.desc}"? Esta ação não pode ser desfeita.`,()=>{
-    POPS=POPS.filter(p=>p.code!==code);
-    addLog(`POP Excluído: ${code}`, 'delete', `${pop.desc} · Setor: ${pop.sectorName}`);
-    saveData();
-    toast('POP Excluído', `${code} removido com sucesso.`, 'warn');
-    renderPOPs();
-    const activePage=document.querySelector('.page.active');
-    if(activePage&&activePage.id==='page-analytics')renderAnalytics();
-  });
-}
-
 function openEditPOP(code){
   const pop=POPS.find(p=>p.code===code);
   if(!pop)return;
