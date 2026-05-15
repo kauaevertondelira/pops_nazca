@@ -438,6 +438,26 @@ function setFilter(s){currentSectorFilter=s;renderAnalytics();}
 function clearFilter(){setFilter(null);}
 
 /* ══════════════════════════════════════════
+   DATE HELPERS
+══════════════════════════════════════════ */
+
+// Converte de DD/MM/AAAA para AAAA-MM-DD (usado no openEditPOP)
+function brToIso(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return '';
+  const parts = dateStr.split('/');
+  if (parts.length !== 3) return dateStr; // Retorna como está se não estiver no formato esperado
+  return `${parts[2]}-${parts[1]}-${parts[0]}`;
+}
+
+// Converte de AAAA-MM-DD para DD/MM/AAAA (usado no salvarEditPOP)
+function isoToBr(dateStr) {
+  if (!dateStr || typeof dateStr !== 'string') return '';
+  const parts = dateStr.split('-');
+  if (parts.length !== 3) return dateStr;
+  return `${parts[2]}/${parts[1]}/${parts[0]}`;
+}
+
+/* ══════════════════════════════════════════
    POPs LIST
 ══════════════════════════════════════════ */
 function renderPOPs(){
@@ -487,53 +507,68 @@ function deletePOP(code){
 }
 
 function openEditPOP(code){
-  const pop=POPS.find(p=>p.code===code);
-  if(!pop)return;
-  openModal(`Editar <span>${code}</span>`,`
-    <div class="form-grid">
-      <div class="form-group"><label class="form-label">Tipo</label>
-        <select class="form-select" id="ep-type">
-          <option value="core" ${pop.popType==='core'?'selected':''}>Core — Obrigatório</option>
-          <option value="area" ${pop.popType==='area'?'selected':''}>Área — Setor Específico</option>
-          <option value="cargo" ${pop.popType==='cargo'?'selected':''}>Cargo — Função Específica</option>
-        </select>
+  console.log("1. Botão clicado! Código recebido:", code);
+  
+  // Usando == em vez de === para evitar problemas de Tipo (String vs Number)
+  const pop = POPS.find(p => p.code == code); 
+  console.log("2. Resultado da busca no array POPS:", pop);
+
+  if(!pop) {
+    alert("ERRO: O POP não foi encontrado no array principal.");
+    return;
+  }
+
+  try {
+    openModal(`Editar <span>${code}</span>`,`
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Tipo</label>
+          <select class="form-select" id="ep-type">
+            <option value="core" ${pop.popType==='core'?'selected':''}>Core — Obrigatório</option>
+            <option value="area" ${pop.popType==='area'?'selected':''}>Área — Setor Específico</option>
+            <option value="cargo" ${pop.popType==='cargo'?'selected':''}>Cargo — Função Específica</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Status Doc</label>
+          <select class="form-select" id="ep-status">
+            <option value="ELABORAR" ${pop.docStatus==='ELABORAR'?'selected':''}>Elaborar</option>
+            <option value="EM REVISÃO" ${pop.docStatus==='EM REVISÃO'?'selected':''}>Em Revisão</option>
+            <option value="APROVADO" ${pop.docStatus==='APROVADO'?'selected':''}>Aprovado</option>
+            <option value="OBSOLETO" ${pop.docStatus==='OBSOLETO'?'selected':''}>Obsoleto</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Vigência</label>
+          <select class="form-select" id="ep-vigencia">
+            <option value="NO PRAZO" ${pop.vigencia==='NO PRAZO'?'selected':''}>No Prazo</option>
+            <option value="VENCE EM 3 MESES" ${pop.vigencia==='VENCE EM 3 MESES'?'selected':''}>Vence em 3 Meses</option>
+            <option value="VENCIDO" ${pop.vigencia==='VENCIDO'?'selected':''}>Vencido</option>
+            <option value="OBSOLETO" ${pop.vigencia==='OBSOLETO'?'selected':''}>Obsoleto</option>
+            <option value="ELABORAR" ${pop.vigencia==='ELABORAR'?'selected':''}>Elaborar</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Treinamento</label>
+          <select class="form-select" id="ep-training">
+            <option value="OK" ${pop.training==='OK'?'selected':''}>OK</option>
+            <option value="SOLICITADO" ${pop.training==='SOLICITADO'?'selected':''}>Solicitado</option>
+            <option value="N.A" ${pop.training==='N.A'?'selected':''}>N/A</option>
+          </select>
+        </div>
       </div>
-      <div class="form-group"><label class="form-label">Status Doc</label>
-        <select class="form-select" id="ep-status">
-          <option value="ELABORAR" ${pop.docStatus==='ELABORAR'?'selected':''}>Elaborar</option>
-          <option value="EM REVISÃO" ${pop.docStatus==='EM REVISÃO'?'selected':''}>Em Revisão</option>
-          <option value="APROVADO" ${pop.docStatus==='APROVADO'?'selected':''}>Aprovado</option>
-          <option value="OBSOLETO" ${pop.docStatus==='OBSOLETO'?'selected':''}>Obsoleto</option>
-        </select>
+      <div class="form-group"><label class="form-label">Descrição</label><input type="text" class="form-input" id="ep-desc" value="${pop.desc}"></div>
+      <div class="form-grid">
+        <div class="form-group"><label class="form-label">Data de Criação</label><input type="date" class="form-input" id="ep-criacao" value="${pop.dataCriacao ? brToIso(pop.dataCriacao) : ''}"></div>
+        <div class="form-group"><label class="form-label">Data de Revisão</label><input type="date" class="form-input" id="ep-revisao" value="${pop.dataRevisao ? brToIso(pop.dataRevisao) : ''}"></div>
       </div>
-      <div class="form-group"><label class="form-label">Vigência</label>
-        <select class="form-select" id="ep-vigencia">
-          <option value="NO PRAZO" ${pop.vigencia==='NO PRAZO'?'selected':''}>No Prazo</option>
-          <option value="VENCE EM 3 MESES" ${pop.vigencia==='VENCE EM 3 MESES'?'selected':''}>Vence em 3 Meses</option>
-          <option value="VENCIDO" ${pop.vigencia==='VENCIDO'?'selected':''}>Vencido</option>
-          <option value="OBSOLETO" ${pop.vigencia==='OBSOLETO'?'selected':''}>Obsoleto</option>
-          <option value="ELABORAR" ${pop.vigencia==='ELABORAR'?'selected':''}>Elaborar</option>
-        </select>
+      ${anexosEditor(pop)}
+      <div style="display:flex;gap:10px;margin-top:8px">
+        <button class="btn btn-primary" onclick="salvarEditPOP('${code}')">Salvar Alterações</button>
+        <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
       </div>
-      <div class="form-group"><label class="form-label">Treinamento</label>
-        <select class="form-select" id="ep-training">
-          <option value="OK" ${pop.training==='OK'?'selected':''}>OK</option>
-          <option value="SOLICITADO" ${pop.training==='SOLICITADO'?'selected':''}>Solicitado</option>
-          <option value="N.A" ${pop.training==='N.A'?'selected':''}>N/A</option>
-        </select>
-      </div>
-    </div>
-    <div class="form-group"><label class="form-label">Descrição</label><input type="text" class="form-input" id="ep-desc" value="${pop.desc}"></div>
-    <div class="form-grid">
-      <div class="form-group"><label class="form-label">Data de Criação</label><input type="date" class="form-input" id="ep-criacao" value="${brToIso(pop.dataCriacao)}"></div>
-      <div class="form-group"><label class="form-label">Data de Revisão</label><input type="date" class="form-input" id="ep-revisao" value="${brToIso(pop.dataRevisao)}"></div>
-    </div>
-    ${anexosEditor(pop)}
-    <div style="display:flex;gap:10px;margin-top:8px">
-      <button class="btn btn-primary" onclick="salvarEditPOP('${code}')">Salvar Alterações</button>
-      <button class="btn btn-outline" onclick="closeModal()">Cancelar</button>
-    </div>
-  `);
+    `);
+    console.log("3. Modal chamado com sucesso!");
+  } catch (erro) {
+    console.error("4. ERRO CRÍTICO AO MONTAR O MODAL:", erro);
+    alert("Ocorreu um erro ao abrir. Verifique o console (F12).");
+  }
 }
 
 function salvarEditPOP(code){
@@ -2458,8 +2493,7 @@ function anexosEditorNew(){
   <div class="form-group" style="margin-bottom:14px">
     <label class="form-label">📎 Este POP possui anexo?</label>
     <div style="display:flex;gap:10px;margin-top:6px">
-      <button type="button" class="btn btn-outline btn-sm" id="new-anexo-sim" onclick="toggleAnexoNew('sim')" style="border-color:var(--border)">✅ Sim</button>
-      <button type="button" class="btn btn-outline btn-sm" id="new-anexo-nao" onclick="toggleAnexoNew('nao')" style="background:var(--gray-pale)">❌ Não</button>
+      <button type="button" class="btn btn-outline btn-sm" id="new-anexo-sim" onclick="toggleAnexoNew('sim')" style="border-color:var(--border)">📍Anexar</button>
     </div>
     <input type="hidden" id="new-has-anexo" value="">
     <div id="new-anexo-content" style="display:none;margin-top:12px;padding:14px;background:var(--blue-bg);border-radius:var(--r);border-left:3px solid var(--blue)">
@@ -2492,8 +2526,7 @@ function anexosEditor(pop){
     <label class="form-label">📎 Este POP possui anexo?</label>
     ${hasA?`<div style="margin-top:4px;font-size:var(--fs-xs);color:var(--green);font-weight:600">✅ Atual: ${currentLabel}</div>`:''}
     <div style="display:flex;gap:10px;margin-top:8px">
-      <button type="button" class="btn btn-sm ${hasA?'btn-primary':'btn-outline'}" id="ep-anexo-sim" onclick="toggleAnexoEp('sim')" style="${hasA?'':'border-color:var(--border)'}">✅ Sim</button>
-      <button type="button" class="btn btn-sm ${!hasA?'btn-primary':'btn-outline'}" id="ep-anexo-nao" onclick="toggleAnexoEp('nao')" style="${!hasA?'':'background:var(--gray-pale)'}">❌ Não</button>
+      <button type="button" class="btn btn-sm ${hasA?'btn-primary':'btn-outline'}" id="ep-anexo-sim" onclick="toggleAnexoEp('sim')" style="${hasA?'':'border-color:var(--border)'}">📍Anexar</button>
     </div>
     <input type="hidden" id="ep-has-anexo" value="${hasA?'sim':'nao'}">
     <div id="ep-anexo-content" style="display:${hasA?'block':'none'};margin-top:12px;padding:14px;background:var(--blue-bg);border-radius:var(--r);border-left:3px solid var(--blue)">
